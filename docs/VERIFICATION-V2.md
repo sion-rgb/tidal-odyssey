@@ -70,4 +70,11 @@ Windows Chrome／ANGLE Direct3D11／NVIDIA RTX 2070 SUPER。本地最終回歸�
 
 ## 公開部署
 
-部署與公開網址的最終測試結果會於實際完成後記錄於此。
+- [公開網站](https://sion-rgb.github.io/tidal-odyssey/) HTTP 200，倉庫 visibility 已核對為 PUBLIC。
+- [GitHub Actions #39231819233](https://github.com/sion-rgb/tidal-odyssey/actions/runs/39231819233) 的安裝、測試、build 與 Pages deploy 全部成功；網站程式提交為 `17ca580cd742ca1908aecf3db0578c662d47c55a`。
+- 從公開網址重新跑完整、未加速的 100 秒遊覽及互動／尺寸檢查：**32 項通過**，包括畫質切換與同頁視窗縮放。[原始結果](qa-public-v2/results.json)。
+- 公開站測試 Console errors 0、失敗 HTTP 素材請求 0；有同一項 ANGLE X4122 精度 warning。啟動取樣約 52 fps，完整遊覽定時取樣約 75.21–75.23 fps、DPR 1；不是隔離效能基準或實體手機保證。
+- HTML、JS／CSS、全部 GLB／WebP／HDR 共 **27 個檔案、7,206,088 bytes**，逐一核對與本地 dist 的 SHA-256 完全一致。[部署憑證](deployment-receipt-v2.json)。
+- 首次公開檢查曾遇短暫 DNS／TLS timeout；未改動系統網路設定，重新解析及請求後成功，32 項與檔案雜湊均為成功重跑的結果。
+- 其後的證據紀錄提交只加入文件與測試輸出，網站程式不變。
+- 補充公開站未凍結的 [6 張動畫連續畫面](motion-v2/contact.png)，跨度 **7.527 秒**，涵蓋鰭部約 4.83 秒的完整擺動週期；[時間與狀態](motion-v2/sequence.json)記錄 errors 0。人工檢視確認鰭、魚群持續活動，沒有拉長、塌陷或突然翻轉。
