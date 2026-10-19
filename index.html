@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#123d40" />
+    <meta
+      name="description"
+      content="從白沙灘潛入珊瑚海，再衝破雲層。以 Three.js 即時渲染的互動式一鏡到底遠征。"
+    />
+    <title>PELAGIC — 潮汐之境</title>
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  </head>
+  <body>
+    <a class="skip" href="#controls">前往旅程控制</a>
+    <canvas
+      id="world"
+      aria-label="即時 3D 海島、海底與天空，使用下方控制列遊覽"
+    ></canvas>
+    <div class="scrim" aria-hidden="true"></div>
+    <header>
+      <nav aria-label="網站導覽">
+        <button id="about-open">
+          關於旅程 <span aria-hidden="true">↗</span></button
+        ><button id="sound" aria-pressed="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 9h4l5-4v14l-5-4H4zM17 9q4 3 0 6M20 6q7 6 0 12" /></svg
+          ><span>開啟聲音</span>
+        </button>
+      </nav>
+    </header>
+    <main id="story">
+      <div class="intro-copy">
+        <p class="journey-caption" id="chapter-kicker">一場跨越海與天的遠征</p>
+        <h1 id="headline">把世界，<br />交給潮汐。</h1>
+        <p id="description">
+          從腳下的白沙，到海的另一面。<br />跟隨一道光，去往更遠的地方。
+        </p>
+        <button id="begin" class="primary">
+          開始遠征 <span aria-hidden="true">↗</span>
+        </button>
+      </div>
+      <aside class="altitude" aria-label="攝影機高度">
+        <span id="altitude-label">海拔</span
+        ><strong id="altitude-value">+4<span>m</span></strong
+        ><span id="location">熱帶海岸</span>
+      </aside>
+      <div class="scroll-hint" aria-hidden="true">
+        <span class="mouse"><i></i></span
+        ><span>滾動探索<br /><small>或開啟自動遊覽</small></span>
+      </div>
+    </main>
+    <footer id="controls" aria-label="旅程控制" data-ui>
+      <div class="transport">
+        <button
+          id="play"
+          class="icon-button"
+          aria-label="播放自動遊覽"
+          aria-pressed="false"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path id="play-icon" d="M8 5l11 7-11 7z" />
+          </svg></button
+        ><button
+          id="reverse"
+          class="icon-button"
+          aria-label="反向返回"
+          aria-pressed="false"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 7H5l4-4M5 7a8 8 0 1 1-1 9" />
+          </svg></button
+        ><span id="play-label">自動遊覽</span>
+      </div>
+      <div class="timeline">
+        <div class="chapter-nav" aria-label="旅程章節">
+          <button data-chapter="0" aria-current="step">白沙之岸</button
+          ><button data-chapter="1">深藍之下</button
+          ><button data-chapter="2">雲海之上</button>
+        </div>
+        <label class="sr-only" for="progress">旅程進度</label
+        ><input
+          id="progress"
+          type="range"
+          min="0"
+          max="1000"
+          value="0"
+          aria-valuetext="白沙之岸，0%"
+        />
+        <div class="time-labels">
+          <span id="elapsed">00:00</span><span>一鏡到底 · 約 100 秒</span
+          ><span>01:40</span>
+        </div>
+      </div>
+      <div class="preferences">
+        <label class="sr-only" for="quality">渲染畫質</label
+        ><select id="quality" aria-label="渲染畫質">
+          <option value="auto">自動畫質</option>
+          <option value="high">高畫質</option>
+          <option value="balanced">均衡</option>
+          <option value="low">省電</option></select
+        ><button id="help" class="icon-button" aria-label="操作說明">?</button>
+      </div>
+    </footer>
+    <div id="loading" role="status" aria-live="polite">
+      <div class="loader-brand">PELAGIC</div>
+      <p>讓海洋甦醒</p>
+      <progress
+        id="load-progress"
+        max="100"
+        value="5"
+        aria-label="載入進度"
+      ></progress
+      ><span id="load-status">正在建立海岸 · 5%</span>
+    </div>
+    <p id="notice" role="status" aria-live="polite"></p>
+    <dialog id="about">
+      <button class="dialog-close" aria-label="關閉說明">×</button>
+      <p>PELAGIC · 潮汐之境</p>
+      <h2>海，是天空的起點。</h2>
+      <p>
+        沿著同一條鏡頭軌跡，走過白沙、潛入珊瑚礁，再穿越雲層。所有景物均為瀏覽器即時
+        3D 渲染。
+      </p>
+      <h3>由你決定步伐</h3>
+      <p>
+        滾輪或上下滑動探索；空白鍵播放／暫停，方向鍵前進／後退，R 反向，Home /
+        End 前往起點／終點。進度列可拖曳，章節按鈕會沿路徑移動。
+      </p>
+      <h3>關於這個原型</h3>
+      <p>
+        椰樹採用 Quaternius 的 CC0 模型；海龜採用 Poly by Google 的 CC BY 3.0
+        模型。其餘景物為程序化 3D，音景為 Web Audio
+        即時合成。本作是視覺化原型，尚非寫實電影製作。
+      </p>
+      <p>
+        音訊只在你按下「開啟聲音」後啟用。系統設定為減少動態時，旅程預設保持暫停，環境動畫亦會減慢。
+      </p>
+      <a href="https://poly.pizza/m/fklSEvGm1Q8" target="_blank" rel="noopener"
+        >海龜模型與作者 ↗</a
+      >
+      <a href="https://poly.pizza/m/P0tgwyXBgr" target="_blank" rel="noopener"
+        >椰樹模型與作者 ↗</a
+      >
+    </dialog>
+    <noscript>這個即時 3D 網站需要啟用 JavaScript。</noscript>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
