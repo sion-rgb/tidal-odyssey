@@ -18,6 +18,8 @@ Poly Haven 素材採 [CC0 1.0](https://polyhaven.com/license)，下載日期 202
 
 沒有 Tripo／Gemini／ElevenLabs 生成憑證，未使用或宣稱生成服務已產出資產。未將 API key 或外部 provider 臨時網址放入網站。
 
+v2.1 的泡沫環、氣泡／水滴粒子、鏡頭折射水滴及撞水聲同樣為本作程序化製作，沒有新增外部素材或使用預錄過水影片。
+
 ## v1 歷史素材（保留，v2 場景已不使用）
 
 ### 舊版椰樹

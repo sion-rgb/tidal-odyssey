@@ -20,6 +20,7 @@ import { createLife, disposeObject } from "./world/life.ts";
 import { createLens } from "./effects.ts";
 import { OceanAudio } from "./audio.ts";
 import { createMaterials } from "./world/materials.ts";
+import { createSurfaceCrossing } from "./world/surface-crossing.ts";
 
 const $ = <T extends HTMLElement>(id: string) =>
   document.getElementById(id) as T;
@@ -54,7 +55,8 @@ scene.background = new THREE.Color("#96ccce");
 scene.fog = new THREE.FogExp2("#b6d8dd", 0.00028);
 const camera = new THREE.PerspectiveCamera(small ? 66 : 56, 1, 0.07, 10000);
 camera.layers.enable(1);
-const sunDirection = new THREE.Vector3(-0.36, 0.5, -0.8).normalize();
+camera.layers.enable(2);
+const sunDirection = new THREE.Vector3(-0.28, 0.32, -0.9).normalize();
 const sun = new THREE.DirectionalLight("#fff1da", 3.5);
 sun.position.copy(sunDirection).multiplyScalar(100);
 scene.add(sun, sun.target);
@@ -77,8 +79,10 @@ scene.add(atmosphere.sky, atmosphere.clouds);
 const materials = createMaterials(renderer, scene, notice);
 const terrain = createTerrain(materials, low);
 scene.add(terrain.group);
-const ocean = createOcean(renderer, sunDirection, low);
+const ocean = createOcean(renderer, sunDirection, low, atmosphere.sky.material);
 scene.add(ocean.water);
+const crossing = createSurfaceCrossing(low, reduced);
+scene.add(crossing.group);
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
 const lens = createLens(ocean.depthTexture, camera, low, sunDirection);
@@ -427,6 +431,15 @@ function render(now: number) {
       camera.position.y -
       waveHeight(camera.position.x, camera.position.z, worldTime),
     sub = submersion(height);
+  const impact = crossing.update(worldTime, camera, state.p, height);
+  if (impact) audio.splash(impact.direction === "exit", impact.speed);
+  const fov =
+    (innerWidth < 700 ? 66 : 56) +
+    (reduced ? 0 : crossing.impact * (crossing.exit ? 5 : 2));
+  if (Math.abs(camera.fov - fov) > 0.01) {
+    camera.fov = fov;
+    camera.updateProjectionMatrix();
+  }
   scene.fog!.color.copy(aboveFog).lerp(belowFog, sub);
   (scene.fog as THREE.FogExp2).density = THREE.MathUtils.lerp(
     0.00028,
@@ -459,6 +472,9 @@ function render(now: number) {
   lens.uniforms.uTime.value = worldTime;
   lens.uniforms.uSub.value = sub;
   lens.uniforms.uSurface.value = Math.exp(-Math.abs(height) * 3.6);
+  lens.uniforms.uWet.value = crossing.wet;
+  lens.uniforms.uImpact.value = crossing.impact;
+  lens.uniforms.uDropAge.value = crossing.dropAge;
   audio.update(worldTime, sub, camera.position.y);
   $("altitude-label").textContent = height < 0 ? "水深" : "海拔";
   $("altitude-value").innerHTML =
@@ -554,7 +570,7 @@ void Promise.all([
 
 // Read-only runtime evidence is available in production; seek is development-only.
 const diagnostics = () => ({
-  graphicsVersion: "2.0",
+  graphicsVersion: "2.1",
   ibl: !!scene.environment,
   shadowResolution: low ? 1024 : 2048,
   reflectionResolution: low ? 512 : 1024,
@@ -579,6 +595,10 @@ const diagnostics = () => ({
   turtleLoaded: life.turtleLoaded,
   audio: audio.context?.state ?? "not-created",
   reducedMotion: reduced,
+  crossing: crossing.evidence,
+  wetLens: crossing.wet,
+  fov: camera.fov,
+  splashSounds: audio.splashCount,
 });
 Object.defineProperty(window, "pelagicDiagnostics", { value: diagnostics });
 if (import.meta.env.DEV) {
@@ -591,12 +611,30 @@ if (import.meta.env.DEV) {
         timeline.progress(p, false);
       },
       ensureReef,
+      measureGroundClearance: () => {
+        const ray = new THREE.Raycaster(),
+          origin = new THREE.Vector3(),
+          down = new THREE.Vector3(0, -1, 0);
+        let clearance = Infinity;
+        for (const x of [-0.35, 0, 0.35])
+          for (const z of [-0.35, 0, 0.35]) {
+            origin.copy(camera.position);
+            origin.x += x;
+            origin.z += z;
+            ray.set(origin, down);
+            const hit = ray.intersectObject(terrain.group, true)[0];
+            if (hit) clearance = Math.min(clearance, hit.distance);
+          }
+        return clearance;
+      },
       views: {
         ocean: ocean.water,
         clouds: atmosphere.clouds,
         scene,
         lens,
         sun,
+        camera,
+        crossing,
       },
     },
   });
@@ -621,6 +659,7 @@ if (import.meta.env.DEV) {
         seekTween?.kill();
         timeline.progress(points[name], false);
         worldTime = 13;
+        crossing.reset();
         return { state: name };
       },
       setPausedForScreenshot(value: boolean) {

@@ -87,7 +87,7 @@ try {
   const graphics = await diag(page);
   check(
     "v2 PBR environment lighting loaded",
-    graphics.graphicsVersion === "2.0" &&
+    graphics.graphicsVersion === "2.1" &&
       graphics.ibl &&
       graphics.textures >= 20,
   );

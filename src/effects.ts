@@ -19,6 +19,9 @@ export function createLens(
       uTime: { value: 0 },
       uSub: { value: 0 },
       uSurface: { value: 0 },
+      uWet: { value: 0 },
+      uImpact: { value: 0 },
+      uDropAge: { value: 20 },
       uAspect: { value: 1 },
       uAo: { value: low ? 0.35 : 0.65 },
     },
@@ -28,10 +31,29 @@ export function createLens(
       #include <packing>
       uniform sampler2D tDiffuse;uniform sampler2D tDepth;uniform sampler2D tShadow;uniform mat4 uProjectionInverse;uniform mat4 uCameraWorld;uniform mat4 uShadowMatrix;
       uniform float uTime;uniform float uSub;uniform float uSurface;uniform float uAspect;uniform float uAo;uniform vec3 uSun;varying vec2 vUv;
+      uniform float uWet,uImpact,uDropAge;
       vec3 viewPosition(vec2 uv){float d=texture2D(tDepth,clamp(uv,.001,.999)).x;vec4 p=uProjectionInverse*vec4(uv*2.-1.,d*2.-1.,1.);return p.xyz/p.w;}
       float lightAt(vec3 world){vec4 sc=uShadowMatrix*vec4(world,1.);vec3 q=sc.xyz/sc.w;if(any(lessThan(q,vec3(0.)))||any(greaterThan(q,vec3(1.))))return 1.;float d=unpackRGBAToDepth(texture2D(tShadow,q.xy));return mix(.15,1.,step(q.z-.001,d));}
       void main(){
         vec2 center=vUv-.5,uv=vUv+vec2(sin(vUv.y*32.+uTime*1.5),cos(vUv.x*27.+uTime*1.1))*(.0012*uSub+.006*uSurface);
+        uv+=normalize(center+vec2(.0001))*sin(length(center*vec2(uAspect,1.))*44.-uDropAge*28.)*uImpact*.003;
+        float dropLight=0.,dropShade=0.;
+        if(uWet>.002&&uSub<.9){
+          for(int i=0;i<${low ? 8 : 16};i++){
+            float seed=fract(sin(float(i)*47.13+2.4)*43758.5453),seed2=fract(sin(float(i)*23.71+7.1)*13453.32);
+            vec2 origin=vec2(.05+seed*.9,.15+seed2*.85-min(uDropAge,10.)*(.012+seed*.016));
+            float radius=.011+seed2*.019;
+            vec2 q=(vUv-origin)*vec2(uAspect,1.)/vec2(radius,radius*(1.1+seed*.5));float d=length(q);
+            if(d<1.){
+              float mask=(1.-smoothstep(.75,1.,d))*uWet*(1.-uSub);
+              uv-=q*.012*mask;
+              vec3 n=normalize(vec3(q,sqrt(max(.001,1.-d*d))));
+              float spec=pow(max(0.,dot(n,normalize(vec3(-.4,.6,.7)))),45.);
+              dropLight+=(spec*.8+exp(-pow((d-.88)*15.,2.))*.13)*mask;
+              dropShade+=mask*.16;
+            }
+          }
+        }
         vec3 color=texture2D(tDiffuse,clamp(uv,.001,.999)).rgb;
         float d=texture2D(tDepth,vUv).x;vec3 vp=viewPosition(vUv);
         if(d<.99998&&length(vp)<65.){
@@ -64,6 +86,7 @@ export function createLens(
           color*=mix(vec3(1.),vec3(.72,1.02,1.03),uSub*.38);
         }
         color*=1.-dot(center*vec2(1.,.8),center)*.28;
+        color=color*(1.-min(.3,dropShade))+vec3(.75,.9,1.)*dropLight;
         gl_FragColor=vec4(color,1.);
       }`,
   });

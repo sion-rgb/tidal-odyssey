@@ -36,7 +36,7 @@ export function distantIslandHeight(xx: number, zz: number, island: number[]) {
 
 export const causticGLSL = `
 float causticField(vec3 p,float time){
-  vec2 q=(p.xz-p.y*vec2(-.36,-.8)/.5)*.65;
+  vec2 q=(p.xz-p.y*vec2(-.28,-.9)/.32)*.65;
   q+=vec2(sin(q.y*.7+time*.65),cos(q.x*.6-time*.5))*.8;
   float c=sin(q.x+sin(q.y*1.1+time*.5))*sin(q.y+cos(q.x*.9-time*.6));
   return pow(1.-abs(c),18.);
@@ -118,7 +118,20 @@ export function createTerrain(materials: WorldMaterials, low: boolean) {
     low ? 110 : 160,
   );
   geometry.rotateX(-Math.PI / 2);
-  geometry.translate(-10, 0, -15);
+  // Spend the existing vertices near the walking shoreline, not the flat abyss.
+  const beachVertices = geometry.attributes.position;
+  for (let i = 0; i < beachVertices.count; i++) {
+    const u = beachVertices.getX(i) / 170,
+      v = beachVertices.getZ(i) / 175;
+    beachVertices.setX(
+      i,
+      Math.sign(u) * Math.pow(Math.abs(u), 1.6) * (u < 0 ? 180 : 160),
+    );
+    beachVertices.setZ(
+      i,
+      20 + Math.sign(v) * Math.pow(Math.abs(v), 1.6) * (v < 0 ? 210 : 140),
+    );
+  }
   ground(geometry, terrainHeight);
   const floor = new THREE.PlaneGeometry(6000, 6000);
   floor.rotateX(-Math.PI / 2);
@@ -156,8 +169,8 @@ export function createTerrain(materials: WorldMaterials, low: boolean) {
         }
       });
       for (const [x, z, scale, rotation] of [
-        [-11, 15, 0.22, 0.3],
-        [-4, 19, 0.09, 1.8],
+        [-12, 24, 0.16, 0.3],
+        [-8, 29, 0.09, 1.8],
         [10, -8, 0.22, 2],
         [-30, -63, 0.28, -0.8],
       ]) {
@@ -166,6 +179,21 @@ export function createTerrain(materials: WorldMaterials, low: boolean) {
         patch.scale.setScalar(scale);
         patch.rotation.y = rotation;
         patch.position.set(x, terrainHeight(x, z) - 0.25, z);
+        patch.name = `shore-rock-${x}-${z}`;
+        patch.updateWorldMatrix(true, true);
+        const footprint = new THREE.Box3().setFromObject(patch);
+        let support = Infinity;
+        for (let ix = 0; ix < 3; ix++)
+          for (let iz = 0; iz < 3; iz++)
+            support = Math.min(
+              support,
+              terrainHeight(
+                THREE.MathUtils.lerp(footprint.min.x, footprint.max.x, ix / 2),
+                THREE.MathUtils.lerp(footprint.min.z, footprint.max.z, iz / 2),
+              ),
+            );
+        // Bury the base across the footprint instead of floating a flat scan on a slope.
+        patch.position.y += support - footprint.min.y - 0.18;
         if (patch.position.y < -3) patch.traverse((o) => o.layers.set(1));
         group.add(patch);
       }

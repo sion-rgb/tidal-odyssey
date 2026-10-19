@@ -4,9 +4,9 @@ export const DURATION = 100;
 export const CHAPTERS = [0, 0.4, 0.84] as const;
 // The same continuous curve is sampled in either direction. Y=0 is mean sea level.
 export const WAYPOINTS = [
-  [0, 4.6, 25],
-  [1, 3.0, 17],
-  [2, 1.8, 5],
+  [0, 5.6, 25],
+  [1, 4.2, 17],
+  [2, 2.1, 5],
   [2, 0.45, -8],
   [1, -3.5, -20],
   [-4, -12, -36],
@@ -14,9 +14,9 @@ export const WAYPOINTS = [
   [0, -20, -77],
   [15, -17, -93],
   [23, -8, -106],
-  [25, -2, -112],
-  [25, 6, -113],
-  [22, 36, -105],
+  [25, -4, -112],
+  [25, 16, -113],
+  [22, 58, -105],
   [6, 100, -75],
   [-35, 180, 60],
   [-100, 260, 240],
@@ -59,13 +59,23 @@ export function sampleRoute(
   gaze.getPoint(p, target);
   return { position, target };
 }
+// CPU crossings, displaced surface, spray and normals share these wave terms.
+const waves = [
+  [0.16, 0.2, 0.11, -0.85],
+  [0.1, -0.06, 0.3, 1.1],
+  [0.035, 0.85, 0.65, -1.7],
+] as const;
 export function waveHeight(x: number, z: number, time: number) {
-  return (
-    0.12 * Math.sin(x * 0.18 + time * 0.7) +
-    0.07 * Math.sin(z * 0.23 + time * 0.9) +
-    0.035 * Math.sin(x * 0.7 + z * 0.42 - time * 1.2)
-  );
+  let y = 0;
+  for (const [a, kx, kz, speed] of waves)
+    y += a * Math.sin(x * kx + z * kz + time * speed);
+  return y;
 }
+const f = (n: number) => n.toFixed(5);
+export const waveGLSL = `
+float oceanWave(vec2 p,float t){return ${waves.map(([a, x, z, s]) => `${f(a)}*sin(p.x*${f(x)}+p.y*${f(z)}+t*${f(s)})`).join("+")};}
+vec2 oceanSlope(vec2 p,float t){return ${waves.map(([a, x, z, s]) => `vec2(${f(a * x)},${f(a * z)})*cos(p.x*${f(x)}+p.y*${f(z)}+t*${f(s)})`).join("+")};}
+`;
 export function submersion(height: number) {
   return 1 - MathUtils.smoothstep(height, -0.42, 0.42);
 }

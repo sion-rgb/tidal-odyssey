@@ -16,7 +16,7 @@ export function createAtmosphere(sun: THREE.Vector3, low: boolean) {
   ).replace(
     "#include <tonemapping_fragment>",
     `float elevation=max(direction.y,0.);
-    vec3 calibratedSky=mix(vec3(.56,.79,.89),vec3(.035,.28,.60),pow(elevation,.36));
+    vec3 calibratedSky=mix(vec3(.34,.65,.84),vec3(.025,.22,.52),pow(elevation,.36));
     vec3 daylight=mix(min(gl_FragColor.rgb*.35,vec3(2.)),calibratedSky,.8)+vec3(8.,7.,5.)*sundisc;
     gl_FragColor.rgb=mix(daylight,vec3(.004,.084,.138),submerge);
     #include <tonemapping_fragment>`,
@@ -70,7 +70,7 @@ export function createAtmosphere(sun: THREE.Vector3, low: boolean) {
     cloudMaterial,
   );
   clouds.position.set(0, 95, -70);
-  clouds.renderOrder = 5;
+  clouds.renderOrder = 1;
   clouds.onBeforeRender = (_renderer, _scene, renderCamera) =>
     cloudMaterial.uniforms.uCamera.value.copy(renderCamera.position);
   return {

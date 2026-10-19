@@ -1,10 +1,12 @@
 import * as THREE from "three";
 import { Water } from "three/addons/objects/Water.js";
+import { waveGLSL } from "../route.ts";
 
 export function createOcean(
   renderer: THREE.WebGLRenderer,
   sun: THREE.Vector3,
   low: boolean,
+  sky: THREE.ShaderMaterial,
 ) {
   const size = 256,
     pixels = new Uint8Array(size * size * 4);
@@ -74,44 +76,49 @@ export function createOcean(
   water.material.uniforms.refractionSampler = { value: refraction.texture };
   water.material.uniforms.viewport = { value: new THREE.Vector2(1, 1) };
   water.material.uniforms.cameraY = { value: 4 };
+  water.material.uniforms.reflectionAmount = { value: 1 };
   water.material.uniforms.depthSampler = { value: refraction.depthTexture };
   water.material.uniforms.cameraRange = {
     value: new THREE.Vector2(0.07, 10000),
   };
-  water.material.vertexShader = water.material.vertexShader
-    .replace(
-      "mirrorCoord = modelMatrix * vec4( position, 1.0 );",
-      `
+  water.material.vertexShader =
+    waveGLSL +
+    water.material.vertexShader
+      .replace(
+        "mirrorCoord = modelMatrix * vec4( position, 1.0 );",
+        `
       vec3 displaced = position;
       vec4 wp = modelMatrix * vec4(position, 1.0);
-      displaced.z += .12*sin(wp.x*.18+time*.7)+.07*sin(wp.z*.23+time*.9)+.035*sin(wp.x*.7+wp.z*.42-time*1.2);
+      displaced.z += oceanWave(wp.xz,time);
       mirrorCoord = modelMatrix * vec4(displaced, 1.0);`,
-    )
-    .replace(
-      "modelViewMatrix * vec4( position, 1.0 )",
-      "modelViewMatrix * vec4( displaced, 1.0 )",
-    );
-  water.material.fragmentShader = water.material.fragmentShader
-    .replace(
-      "uniform float alpha;",
-      "uniform float alpha; uniform sampler2D refractionSampler; uniform sampler2D depthSampler; uniform vec2 cameraRange; uniform vec2 viewport; uniform float cameraY;",
-    )
-    .replace(
-      "vec3 surfaceNormal = normalize( noise.xzy * vec3( 1.5, 1.0, 1.5 ) );",
-      `vec2 p=worldPosition.xz;
-      vec2 slopes=vec2(.022*cos(p.x*.18+time*.7)+.024*cos(p.x*.7+p.y*.42-time*1.2),.016*cos(p.y*.23+time*.9)+.014*cos(p.x*.7+p.y*.42-time*1.2));
+      )
+      .replace(
+        "modelViewMatrix * vec4( position, 1.0 )",
+        "modelViewMatrix * vec4( displaced, 1.0 )",
+      );
+  water.material.fragmentShader =
+    waveGLSL +
+    water.material.fragmentShader
+      .replace(
+        "uniform float alpha;",
+        "uniform float alpha; uniform sampler2D refractionSampler; uniform sampler2D depthSampler; uniform vec2 cameraRange; uniform vec2 viewport; uniform float cameraY; uniform float reflectionAmount;",
+      )
+      .replace(
+        "vec3 surfaceNormal = normalize( noise.xzy * vec3( 1.5, 1.0, 1.5 ) );",
+        `vec2 p=worldPosition.xz;
+      vec2 slopes=oceanSlope(p,time);
       float detail=1./(1.+dot(fwidth(p),fwidth(p))*2.5);
-      slopes+=vec2(sin(p.x*1.7+p.y*.8-time*1.1),cos(p.y*1.9+p.x*.6+time))*.035*detail;
+      slopes+=vec2(sin(p.x*.93+p.y*1.8+sin(p.y*.8)-time*1.1),cos(p.y*1.3-p.x*.74+sin(p.x*.6)+time))*.05*detail;
       slopes+=vec2(sin(p.x*5.7+p.y*3.1+time*1.4),cos(p.y*4.3-p.x*3.9-time*1.2))*.013*detail*detail;
       vec3 surfaceNormal=normalize(vec3(-slopes.x,1.,-slopes.y));`,
-    )
-    .replace(
-      "vec3 reflectionSample = vec3( texture2D( mirrorSampler, mirrorCoord.xy / mirrorCoord.w + distortion ) );",
-      "vec3 reflectionSample = texture2D(mirrorSampler,clamp(mirrorCoord.xy / mirrorCoord.w+distortion,0.002,0.998)).rgb;",
-    )
-    .replace(
-      "vec3 outgoingLight = albedo;",
-      `
+      )
+      .replace(
+        "vec3 reflectionSample = vec3( texture2D( mirrorSampler, mirrorCoord.xy / mirrorCoord.w + distortion ) );",
+        "vec3 reflectionSample = texture2D(mirrorSampler,clamp(mirrorCoord.xy / mirrorCoord.w+distortion,0.002,0.998)).rgb;",
+      )
+      .replace(
+        "vec3 outgoingLight = albedo;",
+        `
       vec2 suv = gl_FragCoord.xy / viewport;
       vec3 refracted = texture2D(refractionSampler, clamp(suv + surfaceNormal.xz*.016, .002, .998)).rgb;
       float d = length((worldPosition.xz - vec2(-20.,50.))/vec2(55.,65.));
@@ -124,17 +131,17 @@ export function createOcean(
       vec3 transmission=exp(-vec3(.21,.065,.032)*min(pathLength,100.));
       vec3 oceanTint=vec3(.006,.12,.18);
       vec3 body = refracted*transmission + oceanTint*(1.-transmission);
-      float glitter=pow(max(0.,dot(eyeDirection,reflect(-sunDirection,surfaceNormal))),650.);
-      vec3 outgoingLight=mix(body,reflectionSample,clamp(reflectance,.025,.98))+vec3(3.5,3.0,2.1)*glitter;
+      float glitter=pow(max(0.,dot(eyeDirection,reflect(-sunDirection,surfaceNormal))),420.);
+      vec3 outgoingLight=mix(body,reflectionSample*1.15,clamp(reflectance*1.08,.04,.98)*reflectionAmount)+vec3(4.8,4.2,3.)*glitter;
       float coast=(1.-smoothstep(.15,1.8,pathLength))*smoothstep(.55,.82,sin(depth*6.-time*2.+sin(p.x*3.)*.2)*.5+.5);
       outgoingLight=mix(outgoingLight,vec3(.8,.92,.88),coast*.8);
       if(cameraY < worldPosition.y) {
-        float snell = smoothstep(.18,.8,abs(eyeDirection.y));
-        outgoingLight = mix(vec3(.016,.29,.33),refracted*.65+vec3(.035,.18,.2),snell*.8);
+        float snell = smoothstep(.61,.72,abs(eyeDirection.y));
+        outgoingLight = mix(vec3(.008,.12,.18),refracted*.95,snell);
         outgoingLight += pow(max(0.,dot(reflect(-sunDirection,-surfaceNormal),eyeDirection)),160.)*.8;
       }
     `,
-    );
+      );
   let frame = 0;
   const reflect = water.onBeforeRender.bind(water);
   water.onBeforeRender = (...args) => {
@@ -145,15 +152,25 @@ export function createOcean(
     water,
     depthTexture: refraction.depthTexture,
     update(time: number, camera: THREE.Camera, scene: THREE.Scene) {
+      // Keep dense vertices around the lens so the GPU surface matches the CPU crossing.
+      water.position.set(camera.position.x, 0, camera.position.z);
+      water.updateMatrixWorld();
       water.material.uniforms.time.value = time;
       water.material.uniforms.eye.value.copy(camera.position);
       water.material.uniforms.cameraY.value = camera.position.y;
       const original = renderer.getRenderTarget();
       water.visible = false;
+      const skySub = sky.uniforms.submerge.value;
+      const layers = camera.layers.mask;
+      camera.layers.disable(2);
+      // The Snell window sees the actual air sky, not the submerged sky tint.
+      sky.uniforms.submerge.value = 0;
       renderer.setRenderTarget(refraction);
       renderer.clear();
       renderer.render(scene, camera);
       renderer.setRenderTarget(original);
+      sky.uniforms.submerge.value = skySub;
+      camera.layers.mask = layers;
       water.visible = true;
       renderer.getDrawingBufferSize(targetSize);
       water.material.uniforms.viewport.value.copy(targetSize);

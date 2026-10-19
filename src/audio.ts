@@ -1,12 +1,14 @@
 export class OceanAudio {
   context: AudioContext | null = null;
   enabled = false;
+  splashCount = 0;
   private master: GainNode | null = null;
   private filter: BiquadFilterNode | null = null;
   private surf: GainNode | null = null;
   private wind: GainNode | null = null;
   private deep: GainNode | null = null;
   private sources: AudioScheduledSourceNode[] = [];
+  private noiseBuffer: AudioBuffer | null = null;
   async toggle() {
     if (!this.context) this.initialize();
     await this.context!.resume();
@@ -29,6 +31,7 @@ export class OceanAudio {
     filter.connect(master);
     const buffer = ctx.createBuffer(1, ctx.sampleRate * 8, ctx.sampleRate),
       data = buffer.getChannelData(0);
+    this.noiseBuffer = buffer;
     let brown = 0;
     for (let i = 0; i < data.length; i++) {
       brown = (brown + (Math.random() * 2 - 1) * 0.025) / 1.025;
@@ -73,6 +76,44 @@ export class OceanAudio {
       0.3,
     );
     this.deep!.gain.setTargetAtTime(sub * 0.12, now, 0.3);
+  }
+  splash(exiting: boolean, speed: number) {
+    if (
+      !this.enabled ||
+      !this.context ||
+      this.context.state !== "running" ||
+      !this.noiseBuffer
+    )
+      return;
+    this.splashCount++;
+    const ctx = this.context,
+      source = ctx.createBufferSource(),
+      filter = ctx.createBiquadFilter(),
+      gain = ctx.createGain(),
+      now = ctx.currentTime;
+    source.buffer = this.noiseBuffer;
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(exiting ? 1200 : 5200, now);
+    filter.frequency.exponentialRampToValueAtTime(
+      exiting ? 5500 : 450,
+      now + 0.45,
+    );
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(
+      Math.min(0.85, 0.35 + speed * 0.045),
+      now + 0.018,
+    );
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
+    source.connect(filter).connect(gain).connect(this.master!);
+    this.sources.push(source);
+    source.onended = () => {
+      source.disconnect();
+      filter.disconnect();
+      gain.disconnect();
+      const i = this.sources.indexOf(source);
+      if (i >= 0) this.sources.splice(i, 1);
+    };
+    source.start(now, 0.4, 0.95);
   }
   suspend() {
     void this.context?.suspend();

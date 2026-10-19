@@ -1,6 +1,6 @@
 {
   "name": "tidal-odyssey",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,6 +9,7 @@
     "preview": "vite preview --host 127.0.0.1",
     "test": "node --experimental-strip-types --test tests/*.test.ts",
     "qa": "node scripts/qa.mjs",
+    "qa:water": "node scripts/qa-water.mjs",
     "assets:optimize": "node scripts/optimize-assets.mjs",
     "assets:models": "node scripts/build-organic-models.mjs",
     "assets:pbr": "node scripts/fetch-pbr.mjs"

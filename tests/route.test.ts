@@ -48,9 +48,18 @@ test("reversing samples the identical route and optical state", () => {
 });
 test("wave surface and underwater blend are smooth at both sides", () => {
   for (let t = 0; t < 40; t += 0.1) {
-    assert.ok(Math.abs(waveHeight(4, -10, t)) <= 0.226);
+    assert.ok(Math.abs(waveHeight(4, -10, t)) <= 0.296);
   }
   for (let h = -0.42; h < 0.42; h += 0.001) {
     assert.ok(Math.abs(submersion(h) - submersion(h + 0.001)) < 0.003);
+  }
+});
+test("opening maintains adult eye height above the beach", () => {
+  for (let i = 0; i <= 150; i++) {
+    const p = sampleRoute(i / 2000).position;
+    assert.ok(
+      p.y - terrainHeight(p.x, p.z) > 1.8,
+      "opening camera clears the sand by 1.8m",
+    );
   }
 });
