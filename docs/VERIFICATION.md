@@ -37,4 +37,14 @@ Windows Chrome，ANGLE / Direct3D11，**NVIDIA GeForce RTX 2070 SUPER**。完整
 
 這是風格化、低多邊形原型，並非電影寫實畫質。折射、平面反射、光束及焦散為即時近似；海龜沒有骨骼動畫；沒有 4K PBR / 掃描地形 / 物理海洋模擬。海底約 24 公尺，屬珊瑚海視覺場景。沒有將照片或預錄影片當作三幕背景。
 
-公開部署的驗證結果會另存 `docs/qa-public/`，並以 GitHub Actions 成功狀態與公開網址的實際渲染為準。
+## 公開部署實測
+
+- 公開倉庫：[sion-rgb/tidal-odyssey](https://github.com/sion-rgb/tidal-odyssey)，已確認 visibility 為 public。
+- 公開網站：[GitHub Pages](https://sion-rgb.github.io/tidal-odyssey/)，HTTP 200。
+- [Build and deploy #39187072541](https://github.com/sion-rgb/tidal-odyssey/actions/runs/39187072541) 成功，執行了 npm ci、測試、正式打包及部署。
+- 從公開網址重跑未加速的完整 100 秒遊覽及各視窗 / 觸控檢查：**28 項通過**，Console errors / warnings / 失敗素材請求均為 0。見 [公開網站測試結果](qa-public/results.json)。
+- HTML、所有 JS / CSS chunks 及兩個 GLB 共 8 個部署檔案，逐一下載比對本地 `dist/`，全部 bytes 與 SHA-256 相符。見 [部署核對憑證](deployment-receipt.json)。
+- 公開網址測試是在其他瀏覽器亦運行的環境中進行，採樣約 37–75 fps，自動畫質曾降低解析度；不是隔離效能基準。不能把本地約 75 fps 結果當成所有場景 / 裝置的保證。
+- GitHub Actions 有平台層的舊版 action Node runtime / runner image 遷移提示，沒有失敗；應用程式本身使用 Node 24，部署已通過。
+
+公開站實測的程式版本為 `3f399d3`。之後的證據紀錄提交只更新文件與截圖，不改動網站程式。

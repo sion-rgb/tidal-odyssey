@@ -1,0 +1,67 @@
+{
+  "url": "https://sion-rgb.github.io/tidal-odyssey/",
+  "repository": "https://github.com/sion-rgb/tidal-odyssey",
+  "visibility": "public",
+  "appCommit": "3f399d3",
+  "workflow": "https://github.com/sion-rgb/tidal-odyssey/actions/runs/39187072541",
+  "workflowResult": "success",
+  "verifiedAt": "2026-10-19T01:52:58.565Z",
+  "files": [
+    {
+      "file": "index.html",
+      "status": 200,
+      "bytes": 6122,
+      "sha256": "02bdb1b44a1737edfcc3acb46a0fd61afed6fcce6c3c883f317f779fb6a5d89e",
+      "matchesBuild": true
+    },
+    {
+      "file": "assets/index-B_RGtPkj.css",
+      "status": 200,
+      "bytes": 9205,
+      "sha256": "8378ececa8e528b1c710da6b2bfb3f93344dfee930282d148598f963597e30fb",
+      "matchesBuild": true
+    },
+    {
+      "file": "assets/index-clIfpHOp.js",
+      "status": 200,
+      "bytes": 127003,
+      "sha256": "3571dcdbf4e499b0214024cfe3097392ab1b43e05d1e03db60839f7cf8abec8c",
+      "matchesBuild": true
+    },
+    {
+      "file": "assets/motion-xgxdCp6f.js",
+      "status": 200,
+      "bytes": 70040,
+      "sha256": "83d7752fd9a43b4f4bbc3e7ef1e218a3e04bae72f3d71aaedd437403c743aa6c",
+      "matchesBuild": true
+    },
+    {
+      "file": "assets/reef-CnUTI_tp.js",
+      "status": 200,
+      "bytes": 4624,
+      "sha256": "2414ce8f4b930eeaaa287ea801ec27be87f30481b128a9c12a25b779413d5e10",
+      "matchesBuild": true
+    },
+    {
+      "file": "assets/three-166xw7Ra.js",
+      "status": 200,
+      "bytes": 564754,
+      "sha256": "80773aa166826bc8c45d426be0869283a9f700dab4cfbc1b5736a8801d73480c",
+      "matchesBuild": true
+    },
+    {
+      "file": "models/palm.glb",
+      "status": 200,
+      "bytes": 36540,
+      "sha256": "a333f57830be9c4ca80629fbea577ef7e91309aa6b359b47dba2e65a180eeb60",
+      "matchesBuild": true
+    },
+    {
+      "file": "models/turtle.glb",
+      "status": 200,
+      "bytes": 39444,
+      "sha256": "a81c021e3aaf8eb24808ccb0aba86f2bb72d8f36128a6a27dc182fe688b6440b",
+      "matchesBuild": true
+    }
+  ]
+}
