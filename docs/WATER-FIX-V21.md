@@ -47,4 +47,10 @@ Windows PowerShell 可用 $env:QA_URL 設網址、$env:QA_OUT 指定新證據目
 
 本地專項過水取樣：桌面入水 127 calls／826,135 triangles、出水 52 calls／465,197 triangles；手機模擬入水 118／490,663、出水 46／217,813。測試機為 RTX 2070 SUPER，取樣約 69–75 fps；不是實體手機效能保證。初始三幕全景仍有先前記錄的超預算問題。
 
-公開網址驗證會在部署完成後附上。
+程式版本 `996dd2cb08ff41990aad8fcc1545633ffb7020be` 已由 [GitHub Actions 39260676610](https://github.com/sion-rgb/tidal-odyssey/actions/runs/39260676610) 成功部署至 [公開站](https://sion-rgb.github.io/tidal-odyssey/)。[部署核對記錄](deployment-receipt-v21.json) 逐一下載正式站的 27 個檔案（7,213,884 bytes），全部 SHA-256 與本地正式打包相同。
+
+- 公開站 [32 項完整回歸通過](qa-public-v21/results.json)，包含完整 100 秒自動旅程、三幕連續性、正反向控制、音訊手勢及五種視窗尺寸。Console errors 0、失敗 HTTP 素材請求 0；仍有一項 ANGLE X4122 精度 warning。
+- 公開站 [17 項過水專項通過](water-v21-public/results.json)，包含桌面／手機的正向入水、出水噴濺、水滴、反向入水、暫停防重複觸發及音訊限制。Console errors 0；同一類 ANGLE 精度 warning 1。開發版專用的網格射線和反射 A/B 入口不包含在正式版，因此正式版檢查數不同。
+- 公開站實際截圖：[開場與反射](qa-public-v21/desktop-coast.png)、[入水氣泡](water-v21-public/desktop-entry-1.png)、[出水噴濺與水滴](water-v21-public/desktop-exit-1.png)、[手機出水](water-v21-public/mobile-exit-1.png)。
+
+以上瀏覽器測試及截圖來自桌面 Chrome；手機項目為視窗／DPR／觸控模擬，並非實體手機驗證。
