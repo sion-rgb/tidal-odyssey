@@ -16,6 +16,8 @@ const evidence = {
   failedRequests: [],
   viewports: [],
   tour: [],
+  performance: [],
+  motion: [],
 };
 function check(name, result = true) {
   assert.ok(result, name);
@@ -81,6 +83,20 @@ try {
       ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)
       : gl.getParameter(gl.RENDERER);
   });
+  await page.waitForTimeout(2600);
+  const graphics = await diag(page);
+  check(
+    "v2 PBR environment lighting loaded",
+    graphics.graphicsVersion === "2.0" &&
+      graphics.ibl &&
+      graphics.textures >= 20,
+  );
+  check(
+    "desktop shadows and planar reflection enabled",
+    graphics.shadowResolution === 2048 &&
+      graphics.reflectionResolution === 1024,
+  );
+  evidence.performance.push({ state: "coast", ...graphics });
   await shot(page, "desktop-coast");
   await page.mouse.wheel(0, 600);
   await page.waitForTimeout(800);
@@ -105,7 +121,15 @@ try {
       window.pelagicDiagnostics().reefLoaded,
   );
   check("reef and deferred compressed turtle loaded");
+  await page.waitForTimeout(2600);
+  evidence.performance.push({ state: "reef", ...(await diag(page)) });
   await shot(page, "desktop-reef");
+  for (let i = 0; i < 3; i++) {
+    await page.waitForTimeout(1200);
+    const path = `${out}/motion-turtle-${i}.png`;
+    await page.screenshot({ path });
+    evidence.motion.push({ path, time: Date.now(), state: await diag(page) });
+  }
   await page.locator("#play").click();
   await page.waitForTimeout(600);
   await page.locator("#play").click();
@@ -153,9 +177,30 @@ try {
       () => performance.getEntriesByType("navigation").length === 1,
     ),
   );
+  await page.locator("#quality").selectOption("low");
+  check(
+    "power-saving quality changes internal resolution",
+    (await diag(page)).pixelRatio === 0.7,
+  );
+  await page.locator("#quality").selectOption("auto");
+  const beforeResize = (await diag(page)).progress;
+  await page.setViewportSize({ width: 1024, height: 768 });
+  await page.waitForTimeout(150);
+  check(
+    "resizing preserves journey and resizes canvas",
+    await page.evaluate(
+      (p) =>
+        Math.abs(window.pelagicDiagnostics().progress - p) < 0.002 &&
+        document.querySelector("canvas").getBoundingClientRect().width === 1024,
+      beforeResize,
+    ),
+  );
+  await page.setViewportSize({ width: 1440, height: 900 });
   await seek(page, 1);
+  await page.waitForTimeout(2600);
+  evidence.performance.push({ state: "sky", ...(await diag(page)) });
   await shot(page, "desktop-sky");
-  await seek(page, 0.81);
+  await seek(page, 0.86);
   await shot(page, "desktop-clouds");
   await seek(page, 0);
   // A full, unaccelerated automatic tour is optional for repeat runs.
@@ -200,6 +245,7 @@ try {
       deviceScaleFactor: mobile ? 2 : 1,
     });
     await seek(page, 0.44);
+    await page.waitForTimeout(2600);
     const layout = await page.evaluate(() => ({
       overflow: document.documentElement.scrollWidth > innerWidth,
       canvas: document.querySelector("canvas").getBoundingClientRect().toJSON(),

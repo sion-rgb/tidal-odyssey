@@ -1,0 +1,111 @@
+[
+  {
+    "id": "aerial_beach_02",
+    "source": "https://polyhaven.com/a/aerial_beach_02",
+    "license": "CC0-1.0",
+    "authors": {
+      "Rob Tuytel": "All"
+    },
+    "maps": {
+      "color": {
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/aerial_beach_02/aerial_beach_02_diff_1k.jpg",
+        "sourceMD5": "8add95ec469c7b776d3289e774927f28",
+        "path": "public/textures/sand-color.webp"
+      },
+      "normal": {
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/aerial_beach_02/aerial_beach_02_nor_gl_1k.jpg",
+        "sourceMD5": "846899ad7a4e9e3fab80e497c0dc890b",
+        "path": "public/textures/sand-normal.webp"
+      },
+      "roughness": {
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/aerial_beach_02/aerial_beach_02_rough_1k.jpg",
+        "sourceMD5": "9d83895af5cfaab9d9fe65c09a9b6b1e",
+        "path": "public/textures/sand-roughness.webp"
+      },
+      "ao": {
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/aerial_beach_02/aerial_beach_02_ao_1k.jpg",
+        "sourceMD5": "818fe7c54ea9a8087daa871665f8adc8",
+        "path": "public/textures/sand-ao.webp"
+      }
+    }
+  },
+  {
+    "id": "palm_tree_bark",
+    "source": "https://polyhaven.com/a/palm_tree_bark",
+    "license": "CC0-1.0",
+    "authors": {
+      "Dimitrios Savva": "Photography",
+      "Rico Cilliers": "Processing"
+    },
+    "maps": {
+      "color": {
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/palm_tree_bark/palm_tree_bark_diff_1k.jpg",
+        "sourceMD5": "d9c9ffbc6c32e51f81696416c0fc661e",
+        "path": "public/textures/bark-color.webp"
+      },
+      "normal": {
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/palm_tree_bark/palm_tree_bark_nor_gl_1k.jpg",
+        "sourceMD5": "c98b2f2f05b5178b68e74c3272a4fe77",
+        "path": "public/textures/bark-normal.webp"
+      },
+      "roughness": {
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/palm_tree_bark/palm_tree_bark_rough_1k.jpg",
+        "sourceMD5": "d413cc8189861ae878078c199f70a3ea",
+        "path": "public/textures/bark-roughness.webp"
+      },
+      "ao": {
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/palm_tree_bark/palm_tree_bark_ao_1k.jpg",
+        "sourceMD5": "67dbd237b1087a6f9ab3e5c09db7048e",
+        "path": "public/textures/bark-ao.webp"
+      }
+    }
+  },
+  {
+    "id": "coral_gravel",
+    "source": "https://polyhaven.com/a/coral_gravel",
+    "license": "CC0-1.0",
+    "authors": {
+      "Rob Tuytel": "All"
+    },
+    "maps": {
+      "color": {
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/coral_gravel/coral_gravel_diff_1k.jpg",
+        "sourceMD5": "62eb2c3c3c83a26d9346661cc6ead66a",
+        "path": "public/textures/reef-color.webp"
+      },
+      "normal": {
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/coral_gravel/coral_gravel_nor_gl_1k.jpg",
+        "sourceMD5": "78645087653d3c9c1c33d5a1ca42661d",
+        "path": "public/textures/reef-normal.webp"
+      },
+      "roughness": {
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/coral_gravel/coral_gravel_rough_1k.jpg",
+        "sourceMD5": "2c0022d9f0139703063562388a8ad089",
+        "path": "public/textures/reef-roughness.webp"
+      },
+      "ao": {
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/coral_gravel/coral_gravel_ao_1k.jpg",
+        "sourceMD5": "2942496bb8f6e6fb9fe2fcb2d9c25848",
+        "path": "public/textures/reef-ao.webp"
+      }
+    }
+  },
+  {
+    "id": "coast_rocks_02",
+    "source": "https://polyhaven.com/a/coast_rocks_02",
+    "license": "CC0-1.0",
+    "authors": {
+      "Rob Tuytel": "Photography, processing",
+      "Rico Cilliers": "cleanup"
+    },
+    "path": "public/models/coast-rocks.glb",
+    "processing": "weld, simplify to 1.2% source triangles, WebP 1K, Meshopt"
+  },
+  {
+    "id": "kiara_5_noon",
+    "source": "https://polyhaven.com/a/kiara_5_noon",
+    "license": "CC0-1.0",
+    "path": "public/textures/environment.hdr",
+    "use": "lighting only, never scene background"
+  }
+]

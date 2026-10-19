@@ -695,6 +695,30 @@ body[data-started="true"] #begin {
 header {
   justify-content: flex-end;
 }
+body[data-started="true"] .intro-copy {
+  pointer-events: none;
+  bottom: 150px;
+}
+body[data-started="true"] h1 {
+  font-size: 36px;
+  line-height: 1.18;
+  margin-bottom: 0;
+}
+body[data-started="true"] #description {
+  display: none;
+}
+body[data-started="true"] .journey-caption {
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+@media (max-width: 700px) {
+  body[data-started="true"] .intro-copy {
+    bottom: 200px;
+  }
+  body[data-started="true"] h1 {
+    font-size: 30px;
+  }
+}
 html,
 body {
   min-height: 100%;

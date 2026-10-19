@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "runId": "v2-camera-final",
+  "captures": [
+    {
+      "mode": "desktop",
+      "state": "coast",
+      "report": "docs/visual-v2-final/desktop-coast.json"
+    },
+    {
+      "mode": "desktop",
+      "state": "reef",
+      "report": "docs/visual-v2-final/desktop-reef.json"
+    },
+    {
+      "mode": "desktop",
+      "state": "sky",
+      "report": "docs/visual-v2-final/desktop-sky.json"
+    },
+    {
+      "mode": "mobile",
+      "state": "coast",
+      "report": "docs/visual-v2-final/mobile-coast.json"
+    },
+    {
+      "mode": "mobile",
+      "state": "reef",
+      "report": "docs/visual-v2-final/mobile-reef.json"
+    },
+    {
+      "mode": "mobile",
+      "state": "sky",
+      "report": "docs/visual-v2-final/mobile-sky.json"
+    }
+  ],
+  "artifacts": [
+    "docs/qa-v2-final/motion-turtle-0.png",
+    "docs/qa-v2-final/motion-turtle-1.png",
+    "docs/qa-v2-final/motion-turtle-2.png"
+  ]
+}

@@ -1,0 +1,112 @@
+{
+  "url": "http://127.0.0.1:5173/",
+  "mode": "desktop",
+  "state": "reef",
+  "requestedState": "reef",
+  "appliedState": "reef",
+  "runId": "v2-camera-final",
+  "seed": null,
+  "screenshotPath": "docs\\visual-v2-final\\desktop-reef.png",
+  "gpu": {
+    "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 2070 SUPER (0x00001E84) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "vendor": "Google Inc. (NVIDIA)",
+    "softwareRendered": false
+  },
+  "result": {
+    "ok": true,
+    "reason": "nonblank",
+    "rect": {
+      "x": 0,
+      "y": 0,
+      "width": 1440,
+      "height": 900
+    },
+    "drawingBuffer": {
+      "width": 1440,
+      "height": 900
+    },
+    "alphaPixels": 4102,
+    "variance": 255,
+    "colorBuckets": 128,
+    "metrics": {
+      "colorBuckets": 174,
+      "colorEntropyBits": 4.47,
+      "edgeDensity": 0.185,
+      "luminance": {
+        "mean": 71.6,
+        "p5": 47.4,
+        "p95": 115.4,
+        "contrast": 68
+      },
+      "dominantColorShare": 0.168,
+      "nonBackgroundShare": 0.832
+    },
+    "renderBudget": {
+      "tier": "desktop",
+      "note": "starting-point budget; adjust per game and document overrides",
+      "rows": [
+        {
+          "metric": "calls",
+          "actual": 113,
+          "limit": 300,
+          "ok": true
+        },
+        {
+          "metric": "triangles",
+          "actual": 1003663,
+          "limit": 750000,
+          "ok": false
+        },
+        {
+          "metric": "geometries",
+          "actual": 56,
+          "limit": 300,
+          "ok": true
+        },
+        {
+          "metric": "textures",
+          "actual": 26,
+          "limit": 60,
+          "ok": true
+        }
+      ],
+      "withinBudget": false
+    },
+    "diagnostics": {
+      "graphicsVersion": "2.0",
+      "ibl": true,
+      "shadowResolution": 2048,
+      "reflectionResolution": 1024,
+      "ready": true,
+      "progress": 0.44,
+      "running": false,
+      "reversed": false,
+      "camera": [
+        -5.226154882343612,
+        -20.650066822658168,
+        -68.49760866305145
+      ],
+      "submerged": 1,
+      "chapter": 1,
+      "pixelRatio": 1,
+      "fps": 68.37606837606843,
+      "adjustments": 0,
+      "drawCalls": 113,
+      "triangles": 1003663,
+      "geometries": 56,
+      "textures": 26,
+      "reefLoaded": true,
+      "turtleLoaded": true,
+      "audio": "not-created",
+      "reducedMotion": false,
+      "renderer": {
+        "calls": 113,
+        "triangles": 1003663,
+        "geometries": 56,
+        "textures": 26
+      }
+    }
+  },
+  "consoleErrors": [],
+  "pageErrors": []
+}

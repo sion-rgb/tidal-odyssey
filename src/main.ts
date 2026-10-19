@@ -19,6 +19,7 @@ import { createAtmosphere } from "./world/atmosphere.ts";
 import { createLife, disposeObject } from "./world/life.ts";
 import { createLens } from "./effects.ts";
 import { OceanAudio } from "./audio.ts";
+import { createMaterials } from "./world/materials.ts";
 
 const $ = <T extends HTMLElement>(id: string) =>
   document.getElementById(id) as T;
@@ -45,36 +46,42 @@ renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.95;
 renderer.info.autoReset = false;
-renderer.shadowMap.enabled = !low;
+renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowMap;
+renderer.shadowMap.autoUpdate = false;
 const scene = new THREE.Scene();
 scene.background = new THREE.Color("#96ccce");
-scene.fog = new THREE.FogExp2("#adcfd1", 0.0011);
+scene.fog = new THREE.FogExp2("#b6d8dd", 0.00028);
 const camera = new THREE.PerspectiveCamera(small ? 66 : 56, 1, 0.07, 10000);
-const sunDirection = new THREE.Vector3(-0.45, 0.7, -0.5).normalize();
-const sun = new THREE.DirectionalLight("#fff1d3", 3.1);
+camera.layers.enable(1);
+const sunDirection = new THREE.Vector3(-0.36, 0.5, -0.8).normalize();
+const sun = new THREE.DirectionalLight("#fff1da", 3.5);
 sun.position.copy(sunDirection).multiplyScalar(100);
-scene.add(sun);
-sun.castShadow = !low;
-sun.shadow.mapSize.set(1024, 1024);
-sun.shadow.camera.left = -60;
-sun.shadow.camera.right = 60;
-sun.shadow.camera.top = 70;
-sun.shadow.camera.bottom = -60;
+scene.add(sun, sun.target);
+sun.castShadow = true;
+sun.shadow.mapSize.set(low ? 1024 : 2048, low ? 1024 : 2048);
+sun.shadow.camera.left = -32;
+sun.shadow.camera.right = 32;
+sun.shadow.camera.top = 38;
+sun.shadow.camera.bottom = -32;
 sun.shadow.camera.far = 240;
-sun.shadow.bias = -0.0005;
-sun.shadow.normalBias = 0.06;
-const ambient = new THREE.HemisphereLight("#cce9f0", "#5f6851", 2.05);
+sun.shadow.bias = -0.00025;
+sun.shadow.normalBias = 0.035;
+const ambient = new THREE.HemisphereLight("#c6e6f1", "#6d6952", 0.55);
 scene.add(ambient);
+const rim = new THREE.DirectionalLight("#74c6da", 0.4);
+rim.position.set(35, 12, -100);
+scene.add(rim);
 const atmosphere = createAtmosphere(sunDirection, low);
 scene.add(atmosphere.sky, atmosphere.clouds);
-const terrain = createTerrain();
+const materials = createMaterials(renderer, scene, notice);
+const terrain = createTerrain(materials, low);
 scene.add(terrain.group);
 const ocean = createOcean(renderer, sunDirection, low);
 scene.add(ocean.water);
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
-const lens = createLens();
+const lens = createLens(ocean.depthTexture, camera, low, sunDirection);
 composer.addPass(lens);
 const fxaa = new ShaderPass({
   uniforms: {
@@ -100,7 +107,7 @@ function loadingProgress(message: string, percent: number) {
   $("load-status").textContent = `${message} · ${percent}%`;
 }
 loadingProgress("建立海洋與日光", 35);
-const life = createLife(low, loadingProgress, notice);
+const life = createLife(low, materials, loadingProgress, notice);
 scene.add(life.group);
 type Reef = ReturnType<(typeof import("./world/reef.ts"))["createReef"]>;
 let reef: Reef | undefined, reefPromise: Promise<void> | undefined;
@@ -108,7 +115,8 @@ function ensureReef() {
   if (!reefPromise)
     reefPromise = import("./world/reef.ts")
       .then(({ createReef }) => {
-        reef = createReef(low);
+        reef = createReef(low, materials);
+        reef.group.traverse((object) => object.layers.set(1));
         scene.add(reef.group);
       })
       .catch(() => {
@@ -397,19 +405,20 @@ resize();
 let raf = 0,
   last = performance.now(),
   worldTime = 0,
+  captureFrozen = false,
   ready = false,
   wasRunning = false,
   disposed = false;
 const position = new THREE.Vector3(),
   target = new THREE.Vector3(),
   aboveFog = new THREE.Color("#b8d9dc"),
-  belowFog = new THREE.Color("#076677");
+  belowFog = new THREE.Color("#0d5268");
 function render(now: number) {
   if (disposed) return;
   const rawDelta = (now - last) / 1000,
     delta = Math.min(rawDelta, 0.05);
   last = now;
-  worldTime += delta * (reduced ? 0.16 : 1);
+  worldTime += captureFrozen ? 0 : delta * (reduced ? 0.16 : 1);
   sampleRoute(state.p, position, target);
   camera.position.copy(position);
   camera.lookAt(target);
@@ -420,16 +429,33 @@ function render(now: number) {
     sub = submersion(height);
   scene.fog!.color.copy(aboveFog).lerp(belowFog, sub);
   (scene.fog as THREE.FogExp2).density = THREE.MathUtils.lerp(
-    0.0011,
-    0.026,
+    0.00028,
+    0.022,
     sub,
   );
-  sun.intensity = THREE.MathUtils.lerp(3.1, 1.75, sub);
-  ambient.intensity = THREE.MathUtils.lerp(2.05, 1.35, sub);
+  sun.intensity = THREE.MathUtils.lerp(3.5, 2.2, sub);
+  ambient.intensity = THREE.MathUtils.lerp(0.65, 0.7, sub);
+  if (camera.position.y < 45)
+    sun.target.position.set(
+      camera.position.x,
+      sub > 0.5 ? -22 : 0,
+      camera.position.z - 12,
+    );
+  else sun.target.position.set(-20, 0, 30);
+  sun.position.copy(sun.target.position).addScaledVector(sunDirection, 130);
+  sun.target.updateMatrixWorld();
+  sun.updateMatrixWorld();
+  renderer.shadowMap.needsUpdate = true;
+  materials.update(worldTime, sub);
   terrain.update(worldTime);
   atmosphere.update(worldTime, camera, sub);
-  life.update(worldTime, state.p, camera.position);
-  reef?.update(worldTime, delta * (reduced ? 0.16 : 1), sub);
+  life.update(worldTime, state.p, camera);
+  reef?.update(
+    worldTime,
+    captureFrozen ? 0 : delta * (reduced ? 0.16 : 1),
+    sub,
+    camera.position,
+  );
   lens.uniforms.uTime.value = worldTime;
   lens.uniforms.uSub.value = sub;
   lens.uniforms.uSurface.value = Math.exp(-Math.abs(height) * 3.6);
@@ -439,6 +465,8 @@ function render(now: number) {
     `${camera.position.y >= 0 ? "+" : ""}${Math.round(camera.position.y)}<span>m</span>`;
   renderer.info.reset();
   ocean.update(worldTime, camera, scene);
+  lens.uniforms.tShadow.value = sun.shadow.map?.texture ?? ocean.depthTexture;
+  lens.uniforms.uShadowMatrix.value.copy(sun.shadow.matrix);
   composer.render();
   if (ready && rawDelta > 0 && rawDelta < 0.4) {
     frameTotal += rawDelta;
@@ -492,6 +520,8 @@ function dispose() {
   seekTween?.kill();
   audio.dispose();
   life.dispose();
+  materials.dispose();
+  atmosphere.dispose();
   ocean.dispose();
   disposeObject(scene);
   composer.passes.forEach((pass) => pass.dispose());
@@ -503,7 +533,11 @@ window.addEventListener("pagehide", (event) => {
   if (!event.persisted) dispose();
 });
 render(performance.now());
-void life.palmReady
+void Promise.all([
+  life.palmReady,
+  materials.ready,
+  terrain.ready.catch(() => notice("岩石掃描模型未能載入。")),
+])
   .then(async () => {
     loadingProgress("編譯即時渲染", 85);
     await renderer.compileAsync(scene, camera);
@@ -520,6 +554,10 @@ void life.palmReady
 
 // Read-only runtime evidence is available in production; seek is development-only.
 const diagnostics = () => ({
+  graphicsVersion: "2.0",
+  ibl: !!scene.environment,
+  shadowResolution: low ? 1024 : 2048,
+  reflectionResolution: low ? 512 : 1024,
   ready,
   progress: state.p,
   running,
@@ -543,7 +581,7 @@ const diagnostics = () => ({
   reducedMotion: reduced,
 });
 Object.defineProperty(window, "pelagicDiagnostics", { value: diagnostics });
-if (import.meta.env.DEV)
+if (import.meta.env.DEV) {
   Object.defineProperty(window, "pelagicTest", {
     value: {
       seek: (p: number) => {
@@ -553,6 +591,53 @@ if (import.meta.env.DEV)
         timeline.progress(p, false);
       },
       ensureReef,
-      views: { ocean: ocean.water, clouds: atmosphere.clouds, scene },
+      views: {
+        ocean: ocean.water,
+        clouds: atmosphere.clouds,
+        scene,
+        lens,
+        sun,
+      },
     },
   });
+  Object.defineProperty(window, "__THREE_GAME_TEST_HOOKS__", {
+    value: {
+      async setState(name: string) {
+        const points: Record<string, number> = {
+          coast: 0,
+          reef: 0.44,
+          sky: 1,
+        };
+        if (!(name in points))
+          throw new Error(`Unknown capture state: ${name}`);
+        while (!ready)
+          await new Promise<void>((resolve) =>
+            requestAnimationFrame(() => resolve()),
+          );
+        await ensureReef();
+        if (name !== "coast") await life.loadTurtle();
+        begin();
+        setRunning(false);
+        seekTween?.kill();
+        timeline.progress(points[name], false);
+        worldTime = 13;
+        return { state: name };
+      },
+      setPausedForScreenshot(value: boolean) {
+        captureFrozen = value;
+        setRunning(false);
+      },
+    },
+  });
+  Object.defineProperty(window, "__THREE_GAME_DIAGNOSTICS__", {
+    get: () => ({
+      ...diagnostics(),
+      renderer: {
+        calls: renderer.info.render.calls,
+        triangles: renderer.info.render.triangles,
+        geometries: renderer.info.memory.geometries,
+        textures: renderer.info.memory.textures,
+      },
+    }),
+  });
+}
